@@ -17,7 +17,15 @@ class ImageAugment(torch.utils.data.Dataset):
         self.transition = list(set(self.labels))
         self.whales = self.labels.replace(self.transition, list(range(5005)))
 
-        for index in range(5005):
+        self.transforms1 = torchvision.transforms.Compose([
+            torchvision.transforms.CenterCrop(10),
+            torchvision.transforms.functional.resize(448,224)
+        ])
+
+        self.transforms2 = torchvision.transforms.ColorJitter()
+
+        self.transforms3 = torchvision.transforms.RandomRotation(180)
+
             
 
     def __getitem__(self, index):
@@ -33,4 +41,28 @@ class ImageAugment(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.labels)
+
+
+    def augment(self, index):
+        image, label = ImageAugment.__getitem__(index)
+
+        self.images.append(self.transforms1(image))
+
+        self.labels.append(label)
+
+        self.images.append(self.transforms2(image))
+
+        self.labels.append(label)
+
+        self.images.append(self.transforms2(image))
+
+        self.labels.append(label)
+
+        self.images.append(self.transforms3(image))
+
+        self.labels.append(label)
+
+        self.images.append(self.transforms3(image))
+
+        self.labels.append(label)
 
