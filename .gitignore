@@ -3,3 +3,5 @@ sauce/
 training_summaries
 .*
 *.zip
+kaggle.json
+
