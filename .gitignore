@@ -1,6 +1,6 @@
 __pycache__
 sauce/
-training_summaries
+runs/
 .*
 *.zip
 kaggle.json
