@@ -65,16 +65,14 @@ def starting_train(train_dataset, val_dataset, model, hyperparameters, n_eval, d
                 # Compute training loss and accuracy.
                 # Log the results to Tensorboard.
 
-                tloss, taccuracy = evaluate(train_loader, model, loss_fn, device)
-                writer.add_scalar("Loss/train", tloss, epoch + 1)
-                writer.add_scalar("Accuracy/train", taccuracy, epoch + 1)
+                writer.add_scalar("Loss/train", loss.mean().item(), epoch + 1)
 
                 # TODO:
                 # Compute validation loss and accuracy.
                 # Log the results to Tensorboard.
                 # Don't forget to turn off gradient calculations!
                 
-                vloss, vaccuracy= evaluate(val_loader, model, loss_fn, device)
+                vloss, vaccuracy = evaluate(val_loader, model, loss_fn, device)
                 writer.add_scalar("Loss/val", vloss, epoch + 1)
                 writer.add_scalar("Accuracy/val", vaccuracy, epoch + 1)
                 model.train()
@@ -86,7 +84,7 @@ def starting_train(train_dataset, val_dataset, model, hyperparameters, n_eval, d
     writer.flush()
 
 
-async def compute_accuracy(outputs, labels):
+def compute_accuracy(outputs, labels):
     """
     Computes the accuracy of a model's predictions.
 
@@ -103,7 +101,7 @@ async def compute_accuracy(outputs, labels):
     return n_correct / n_total
 
 
-async def evaluate(loader, model, loss_fn, device):
+def evaluate(loader, model, loss_fn, device):
     """
     Computes the loss and accuracy of a model on the validation dataset.
     """
@@ -126,9 +124,9 @@ async def evaluate(loader, model, loss_fn, device):
             # So the number of correct predictions is the sum of (labels == predictions)
             correct += (labels == predictions).int().sum()
             total += len(predictions)
-            loss += loss_fn(outputs, labels)
+            loss += loss_fn(outputs, labels).mean().item()
 
     accuracy = correct / total
     
-    return loss, accuracy
+    return loss/len(loader), accuracy
 

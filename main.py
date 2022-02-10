@@ -23,7 +23,8 @@ def main():
     data = StartingDataset("/train/")
     train_size = int(0.7 * len(data))
     test_size = len(data) - train_size
-    train_dataset, val_dataset = torch.utils.data.random_split(data, [train_size, test_size])
+    train_dataset, test_dataset = torch.utils.data.random_split(data, [train_size, test_size])
+    val_dataset = torch.utils.data.Subset(test_dataset, list(range(1000)))
     model = StartingNetwork()
     starting_train(
         train_dataset=train_dataset,
