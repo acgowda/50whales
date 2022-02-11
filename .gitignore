@@ -1,6 +1,5 @@
 __pycache__
 sauce/
-runs/
 .*
 *.zip
 kaggle.json

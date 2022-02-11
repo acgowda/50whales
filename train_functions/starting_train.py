@@ -79,7 +79,7 @@ def starting_train(train_dataset, val_dataset, model, hyperparameters, n_eval, d
 
             step += 1
 
-        print('Epoch:', epoch, 'Loss:', loss.item())
+        print('Epoch:', epoch + 1, 'Loss:', loss.item())
 
     writer.flush()
 
