@@ -22,7 +22,8 @@ def main():
     print("Batch size:", constants.BATCH_SIZE)
 
     # Initalize dataset and model. Then train the model!
-    # data = StartingDataset("/train/")
+
+    #data = StartingDataset("/train/")
     data = TransferDataset("/train/")
     train_size = int(0.7 * len(data))
     test_size = len(data) - train_size
