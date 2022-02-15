@@ -2,13 +2,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
-from pytorch_metric_learning import losses
-
+from pytorch_metric_learning import miners, losses
+from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
 from torch.utils.tensorboard import SummaryWriter
 
 writer = SummaryWriter()
 
-def starting_train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
+def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
     """
     Trains and evaluates a model.
 
@@ -34,13 +34,13 @@ def starting_train(train_dataset, val_dataset, model, hyperparameters, n_eval, d
     # Initalize optimizer (for gradient descent) and loss function
     optimizer = optim.Adam(model.parameters())
     loss_fn = losses.TripletMarginLoss()
+    miner = miners.MultiSimilarityMiner()
 
     # Move the model to the GPU
     model = model.to(device)
 
     step = 1
 
-    # tb = SummaryWriter()
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
 
@@ -50,34 +50,37 @@ def starting_train(train_dataset, val_dataset, model, hyperparameters, n_eval, d
             images, labels = batch
             labels = torch.stack(list(labels), dim=0)
 
+            embeddings = model(images)
+            hard_pairs = miner(embeddings, labels)
+
             images = images.to(device)
             labels = labels.to(device)
+            #hard_pairs = hard_pairs.to(device)
 
-            outputs = model(images)
-
-            loss = loss_fn(outputs, labels)
+            loss = loss_fn(embeddings, labels, hard_pairs)
             loss.backward()       # Compute gradients
             optimizer.step()      # Update all the weights with the gradients you just calculated
+
             optimizer.zero_grad()
 
             # Periodically evaluate our model + log to Tensorboard
-            if step % n_eval == 0:
-                model.eval()
-                # TODO:
-                # Compute training loss and accuracy.
-                # Log the results to Tensorboard.
+            # if step % n_eval == 0:
+            #     model.eval()
+            #     # TODO:
+            #     # Compute training loss and accuracy.
+            #     # Log the results to Tensorboard.
 
-                writer.add_scalar("Loss/train", loss.mean().item(), epoch + 1)
+            #     writer.add_scalar("Loss/train", loss.mean().item(), epoch + 1)
 
-                # TODO:
-                # Compute validation loss and accuracy.
-                # Log the results to Tensorboard.
-                # Don't forget to turn off gradient calculations!
+            #     # TODO:
+            #     # Compute validation loss and accuracy.
+            #     # Log the results to Tensorboard.
+            #     # Don't forget to turn off gradient calculations!
                 
-                vloss, vaccuracy = evaluate(val_loader, model, loss_fn, device)
-                writer.add_scalar("Loss/val", vloss, epoch + 1)
-                writer.add_scalar("Accuracy/val", vaccuracy, epoch + 1)
-                model.train()
+            #     vloss, vaccuracy = evaluate(val_loader, model, loss_fn, device)
+            #     writer.add_scalar("Loss/val", vloss, epoch + 1)
+            #     writer.add_scalar("Accuracy/val", vaccuracy, epoch + 1)
+            #     model.train()
 
             step += 1
 
