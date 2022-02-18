@@ -44,10 +44,6 @@ for i in range(len(labels)):
 
 anchorpath = Path(constants.DATA + "/anchorwhales.csv")
 negativepath = Path(constants.DATA + "/negativewhales.csv")
-# filepath.parent.mkdir(parents = True, exist_ok = True)
-# writer = pd.DataFrame.to_csv(whaledict)
-# writer.to_csv(filepath)
-
 
 with open(anchorpath, 'w', newline = '') as csvfile:
     fieldnames = ['Image', 'Id']
