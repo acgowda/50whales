@@ -1,17 +1,11 @@
-import os
 import torch
 from PIL import Image
 from PIL import ImageOps
 import pandas as pd
 import constants
-import torchvision
-
+from torchvision import transforms
 
 class SiameseDataset(torch.utils.data.Dataset):
-    """
-    Dataset that contains 100000 3x224x224 black images (all zeros).
-    """
-
     def __init__(self, path):
         self.path = path
         self.data = pd.read_csv(constants.DATA + "/train.csv")
@@ -21,15 +15,21 @@ class SiameseDataset(torch.utils.data.Dataset):
         self.transition = list(set(self.labels))
         self.whales = self.labels.replace(self.transition, list(range(5005)))
 
+        self.transform = transforms.Compose([transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]),
+        ])
+
     def __getitem__(self, index):
-        image = Image.open(constants.DATA + self.path + self.images[index])
+        image = Image.open(constants.DATA + self.path + self.images[index]).convert('RGB') 
         label = self.whales[index]
 
-        image = image.resize((448, 224))
-        image = ImageOps.grayscale(image)
+        if self.transform:
+            image = self.transform(image)
 
-        return torchvision.transforms.functional.pil_to_tensor(image), label
-
+        return image, label
 
     def __len__(self):
         return len(self.labels)

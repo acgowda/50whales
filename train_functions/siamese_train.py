@@ -2,11 +2,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
-from pytorch_metric_learning import miners, losses
+from pytorch_metric_learning import miners, losses, testers
 from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
 from torch.utils.tensorboard import SummaryWriter
 
 writer = SummaryWriter()
+# https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TripletMarginLossMNIST.ipynb
 
 def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
     """
@@ -35,6 +36,8 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
     optimizer = optim.Adam(model.parameters())
     loss_fn = losses.TripletMarginLoss()
     miner = miners.MultiSimilarityMiner()
+
+    accuracy_calculator = AccuracyCalculator(include=("precision_at_1",), k=1)
 
     # Move the model to the GPU
     model = model.to(device)
@@ -82,12 +85,26 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
             #     writer.add_scalar("Accuracy/val", vaccuracy, epoch + 1)
             #     model.train()
 
-            step += 1
-
+            # step += 1
+        
+        writer.add_scalar("Loss/train", loss.mean().item(), epoch + 1)
+        a = test(train_dataset, val_dataset, model, accuracy_calculator)
+        writer.add_scalar("Accuracy/Precision@1", a, epoch + 1)
+        
         print('Epoch:', epoch + 1, 'Loss:', loss.item())
 
     writer.flush()
 
+def test(train_set, test_set, model, accuracy_calculator):
+    train_embeddings, train_labels = get_all_embeddings(train_set, model)
+    test_embeddings, test_labels = get_all_embeddings(test_set, model)
+    train_labels = train_labels.squeeze(1)
+    test_labels = test_labels.squeeze(1)
+    print("Computing accuracy")
+    accuracies = accuracy_calculator.get_accuracy(
+        test_embeddings, train_embeddings, test_labels, train_labels, False
+    )
+    return accuracies["precision_at_1"]
 
 def compute_accuracy(embeddings, labels):
     """
@@ -104,6 +121,10 @@ def compute_accuracy(embeddings, labels):
     n_correct = (embeddings == labels).int().sum()
     n_total = len(embeddings)
     return n_correct / n_total
+
+def get_all_embeddings(dataset, model):
+    tester = testers.BaseTester()
+    return tester.get_all_embeddings(dataset, model)
 
 
 def evaluate(loader, model, loss_fn, device):

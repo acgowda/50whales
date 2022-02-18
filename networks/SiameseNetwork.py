@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class SiameseNetwork(nn.Module):
     """
-    Basic logistic regression on 224x224x3 images.
+    Siamese network using ResNet for transfer learning.
     """
 
     def __init__(self):
