@@ -15,21 +15,55 @@ images = data.iloc[:, 0]
 labels = data.iloc[:, 1]
 
 whaledict = {}
-for label in labels:
-    if label in whaledict:
+for i in range(len(labels)):
+    label = labels[i]
+    image = images[i]
+    if label == "new_whale":
+        whaledict[image] = 1
+    elif label in whaledict:
         whaledict[label] += 1
     else:
         whaledict[label] = 1
 
-filepath = Path(constants.DATA + "/whalecount.csv")
+
+anchor = {}
+negative = {}
+
+for i in range(len(labels)):
+    label = labels[i]
+    image = images[i]
+
+    if image in whaledict:
+        negative[image] = label
+    elif label in whaledict:
+        if whaledict[label] > 1:
+            anchor[image] = label
+        else: 
+            negative[image] = label
+    
+
+anchorpath = Path(constants.DATA + "/anchorwhales.csv")
+negativepath = Path(constants.DATA + "/negativewhales.csv")
 # filepath.parent.mkdir(parents = True, exist_ok = True)
 # writer = pd.DataFrame.to_csv(whaledict)
 # writer.to_csv(filepath)
 
-with open(filepath, 'w', newline = '') as csvfile:
-    fieldnames = ['whale', 'count']
+
+with open(anchorpath, 'w', newline = '') as csvfile:
+    fieldnames = ['Image', 'Id']
 
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    for whale in whaledict:
-        writer.writerheader()
-        writer.writerow({'whale' : whale, 'count' : whaledict[whale]})
+    writer.writeheader()
+
+    for whale in anchor:
+        writer.writerow({'Image' : whale, 'Id' : anchor[whale]})
+
+with open(negativepath, 'w', newline = '') as csvfile:
+    fieldnames = ['Image', 'Id']
+
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for whale in negative:
+        writer.writerow({'Image' : whale, 'Id' : negative[whale]})
+
