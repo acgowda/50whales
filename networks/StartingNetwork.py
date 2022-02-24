@@ -41,10 +41,12 @@ class StartingNetwork(nn.Module):
         # (n, 16, 112, 56)
         x = self.pool(x)
         # (n, 16, 56, 28)
-
         x = torch.reshape(x, (-1, 16 * 56 * 28))
-        # (n, 8 * 112 * 56)
+        # (n, 16 * 56 * 28)
         x = self.fc1(x)
+        # (16 * 56 * 28, 5005)
+
+
         # x = F.relu(x)
         # (n, 20020)
         # x = self.fc2(x)

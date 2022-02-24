@@ -53,14 +53,16 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
             images, labels = batch
             labels = torch.stack(list(labels), dim=0)
 
+            images = images.to(device)
+            labels = labels.to(device)
+
             embeddings = model(images)
             hard_pairs = miner(embeddings, labels)
 
-            images = images.to(device)
-            labels = labels.to(device)
+            
             #hard_pairs = hard_pairs.to(device)
 
-            loss = loss_fn(embeddings, labels, hard_pairs)
+            loss = loss_fn(embeddings, labels, hard_pairs).to(device)
             loss.backward()       # Compute gradients
             optimizer.step()      # Update all the weights with the gradients you just calculated
 
@@ -92,6 +94,7 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
         writer.add_scalar("Accuracy/Precision@1", a, epoch + 1)
         
         print('Epoch:', epoch + 1, 'Loss:', loss.item())
+        print('Accuracy:', a)
 
     writer.flush()
 
