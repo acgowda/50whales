@@ -21,7 +21,7 @@ class SiameseDataset(torch.utils.data.Dataset):
             transforms.RandomApply(torch.nn.ModuleList([
                 transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
                 transforms.RandomAffine(180)
-            ]), p=0.5)
+            ]))
         ])
 
         self.transform = transforms.Compose([
