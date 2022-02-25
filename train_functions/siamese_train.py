@@ -5,7 +5,6 @@ from tqdm import tqdm
 from pytorch_metric_learning import miners, losses, testers
 from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
 from torch.utils.tensorboard import SummaryWriter
-
 writer = SummaryWriter()
 # https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TripletMarginLossMNIST.ipynb
 
@@ -88,7 +87,7 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
             #     model.train()
 
             # step += 1
-        
+        print("out of loop")
         writer.add_scalar("Loss/train", loss.mean().item(), epoch + 1)
         a = test(train_dataset, val_dataset, model, accuracy_calculator)
         writer.add_scalar("Accuracy/Precision@1", a, epoch + 1)

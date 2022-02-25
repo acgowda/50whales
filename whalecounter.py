@@ -46,20 +46,22 @@ anchorpath = Path(constants.DATA + "/anchorwhales.csv")
 negativepath = Path(constants.DATA + "/negativewhales.csv")
 
 with open(anchorpath, 'w', newline = '') as csvfile:
-    fieldnames = ['Image', 'Id']
+    fieldnames = ['Image', 'Id', 'Augment']
 
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
 
     for whale in anchor:
-        writer.writerow({'Image' : whale, 'Id' : anchor[whale]})
+        writer.writerow({'Image' : whale, 'Id' : anchor[whale], 'Augment' : 'True'})
+        writer.writerow({'Image' : whale, 'Id' : anchor[whale], 'Augment' : 'False'})
 
 with open(negativepath, 'w', newline = '') as csvfile:
-    fieldnames = ['Image', 'Id']
+    fieldnames = ['Image', 'Id', 'Augment']
 
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
 
     for whale in negative:
-        writer.writerow({'Image' : whale, 'Id' : negative[whale]})
+        writer.writerow({'Image' : whale, 'Id' : negative[whale], 'Augment' : 'True'})
+        writer.writerow({'Image' : whale, 'Id' : negative[whale], 'Augment' : 'False'})
 
