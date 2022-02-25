@@ -56,7 +56,7 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
             labels = labels.to(device)
 
             embeddings = model(images)
-            
+
             hard_pairs = miner(embeddings, labels)
 
             
