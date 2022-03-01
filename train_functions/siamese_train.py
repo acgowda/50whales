@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
-from pytorch_metric_learning import miners, losses, testers
+from pytorch_metric_learning import distances, losses, miners, reducers, testers
 from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
 from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter()
+
 # https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TripletMarginLossMNIST.ipynb
 
 def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
@@ -32,8 +32,11 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
     )
 
     # Initalize optimizer (for gradient descent) and loss function
+
+    distance = distances.CosineSimilarity()
+    reducer = reducers.ThresholdReducer(low=0)
+    loss_fn = losses.TripletMarginLoss(margin=0.2, distance=distance, reducer=reducer)
     optimizer = optim.Adam(model.parameters())
-    loss_fn = losses.TripletMarginLoss()
     miner = miners.MultiSimilarityMiner()
 
     accuracy_calculator = AccuracyCalculator(include=("precision_at_1",), k=1)
@@ -41,6 +44,8 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
     # Move the model to the GPU
     model = model.to(device)
 
+
+    writer = SummaryWriter()
     step = 1
 
     for epoch in range(epochs):
