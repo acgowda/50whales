@@ -2,13 +2,15 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
-from pytorch_metric_learning import distances, losses, miners, reducers, testers
+from pytorch_metric_learning import distances, losses, miners, reducers, testers, samplers
 from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
+import pytorch_metric_learning.utils.common_functions as cf
 from torch.utils.tensorboard import SummaryWriter
+import constants
 
 # https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TripletMarginLossMNIST.ipynb
 
-def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
+def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device, l):
     """
     Trains and evaluates a model.
 
@@ -24,9 +26,17 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
     batch_size, epochs = hyperparameters["batch_size"], hyperparameters["epochs"]
 
     # Initialize dataloaders
+    # train_loader = torch.utils.data.DataLoader(
+    #     train_dataset, batch_size=batch_size, shuffle=True
+    # )
+
+    sampler = samplers.MPerClassSampler(l, 2, batch_size = constants.BATCH_SIZE, length_before_new_iter = len(train_dataset))
+    
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True
-    )
+            train_dataset,
+            batch_size = constants.BATCH_SIZE,
+            sampler = sampler,
+        )
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=batch_size, shuffle=True
     )
@@ -35,7 +45,7 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
 
     distance = distances.CosineSimilarity()
     reducer = reducers.ThresholdReducer(low=0)
-    loss_fn = losses.TripletMarginLoss(margin=0.2, distance=distance, reducer=reducer)
+    loss_fn = losses.TripletMarginLoss(margin=0.5, distance=distance, reducer=reducer)
     optimizer = optim.Adam(model.parameters())
     miner = miners.MultiSimilarityMiner()
 
@@ -46,11 +56,12 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
 
 
     writer = SummaryWriter()
-    step = 1
+    
 
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
-
+        l2 = 0
+        step = 0
         # Loop over each batch in the dataset
         for batch in tqdm(train_loader):
             # TODO: Backpropagation and gradient descent
@@ -64,13 +75,10 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
 
             hard_pairs = miner(embeddings, labels)
 
-            
-            #hard_pairs = hard_pairs.to(device)
-
             loss = loss_fn(embeddings, labels, hard_pairs).to(device)
+            l2 += loss.item()
             loss.backward()       # Compute gradients
             optimizer.step()      # Update all the weights with the gradients you just calculated
-
             optimizer.zero_grad()
 
             # Periodically evaluate our model + log to Tensorboard
@@ -92,13 +100,14 @@ def train(train_dataset, val_dataset, model, hyperparameters, n_eval, device):
             #     writer.add_scalar("Accuracy/val", vaccuracy, epoch + 1)
             #     model.train()
 
-            # step += 1
+            step += 1
+        
+        print('Epoch:', epoch + 1, 'Loss:', l2/step)
 
-        writer.add_scalar("Loss/train", loss.mean().item(), epoch + 1)
+        writer.add_scalar("Loss/train", loss.item(), epoch + 1)
         a = test(train_dataset, val_dataset, model, accuracy_calculator)
         writer.add_scalar("Accuracy/Precision@1", a, epoch + 1)
         
-        print('Epoch:', epoch + 1, 'Loss:', loss.item())
         print('Accuracy:', a)
 
     writer.flush()

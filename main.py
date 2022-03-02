@@ -41,7 +41,8 @@ def main():
         model=model,
         hyperparameters=hyperparameters,
         n_eval=constants.N_EVAL,
-        device = device
+        device = device,
+        l = data.transition
     )
 
 
